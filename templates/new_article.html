@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Новая статья - База знаний{% endblock %}
+{% block content %}
+  <h2>Новая статья</h2>
+  <form action="{{ url_for('create_article') }}" method="post">
+    <p>Заголовок:<br>
+       <input type="text" name="title" required></p>
+    <p>Содержание:<br>
+       <textarea name="content" rows="5" cols="40" required></textarea></p>
+    <p><button type="submit">Сохранить</button></p>
+  </form>
+{% endblock %}
