@@ -7,6 +7,7 @@ class Article(db.Model):
     content = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default="pending")
     author_name = db.Column(db.String(200))
+    comments = db.relationship("Comment", backref="article", lazy=True)
 
     def __repr__(self) -> str:
         return f"<Article {self.id} {self.title}>"
@@ -24,3 +25,27 @@ class User(db.Model):
 
     def __repr__(self) -> str:
         return f"<User {self.id} {self.name}>"
+
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.Integer, db.ForeignKey("article.id"), nullable=False, index=True)
+    author_name = db.Column(db.String(200))
+    content = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default="pending")
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    def __repr__(self) -> str:
+        return f"<Comment {self.id} article={self.article_id}>"
+
+
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    contact_slug = db.Column(db.String(100), nullable=False, index=True)
+    author_name = db.Column(db.String(200))
+    content = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default="pending")
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    def __repr__(self) -> str:
+        return f"<Review {self.id} contact={self.contact_slug}>"

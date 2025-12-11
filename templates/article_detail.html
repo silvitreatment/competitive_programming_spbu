@@ -28,6 +28,46 @@
         {% endif %}
       </div>
     </article>
+    <section class="comments">
+      <div class="comments-head">
+        <h3>Комментарии</h3>
+        {% if current_user %}<span class="status-badge muted">Новые комментарии проходят модерацию</span>{% endif %}
+      </div>
+
+      <div class="comments-list">
+        {% if comments %}
+          {% for comment in comments %}
+            <article class="comment-card">
+              <div class="comment-meta">
+                <strong>{{ comment.author_name or 'Гость' }}</strong>
+                {% if comment.created_at %}<span class="muted">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>{% endif %}
+                {% if comment.status != 'published' %}
+                  <span class="status-badge pending">{{ comment.status }}</span>
+                {% endif %}
+              </div>
+              <p class="comment-text">{{ comment.content }}</p>
+              {% if current_user and current_user.role in ['moderator', 'admin'] and comment.status != 'published' %}
+                <form class="inline-form" action="{{ url_for('publish_comment', comment_id=comment.id) }}" method="post">
+                  <button class="pill primary" type="submit">Опубликовать</button>
+                </form>
+              {% endif %}
+            </article>
+          {% endfor %}
+        {% else %}
+          <p class="muted">Пока нет комментариев.</p>
+        {% endif %}
+      </div>
+
+      {% if current_user %}
+        <form class="comment-form" action="{{ url_for('add_comment', article_id=article.id) }}" method="post">
+          <label for="comment-content">Оставьте комментарий</label>
+          <textarea id="comment-content" name="content" rows="4" placeholder="Напишите отзыв или вопрос..." required></textarea>
+          <button class="pill dark" type="submit">Отправить на модерацию</button>
+        </form>
+      {% else %}
+        <p class="muted">Чтобы оставить комментарий, войдите в систему.</p>
+      {% endif %}
+    </section>
   {% else %}
     <div class="empty-state">
       <h2>Статья не найдена</h2>

@@ -9,7 +9,12 @@ from .routes import register_routes
 
 def create_app(config_class: type = Config) -> Flask:
     """Application factory that wires extensions, auth, routes and DB checks."""
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(
+        __name__,
+        instance_relative_config=True,
+        template_folder="../templates",
+        static_folder="../static",
+    )
     app.config.from_object(config_class)
 
     db.init_app(app)

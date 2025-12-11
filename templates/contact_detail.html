@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ person.name }} — Контакты{% endblock %}
+{% block content %}
+  <section class="contact-hero detail">
+    <div>
+      <p class="eyebrow">Преподаватели</p>
+      <h1>{{ person.name }}</h1>
+      <p class="lead">{{ person.role }}</p>
+      <p>{{ person.about }}</p>
+      <div class="contact-links">
+        {% if person.telegram %}<a class="link-pill" href="{{ person.telegram }}" target="_blank" rel="noopener">Telegram</a>{% endif %}
+        {% if person.email %}<a class="link-pill" href="mailto:{{ person.email }}">Почта</a>{% endif %}
+        <a class="link-pill ghost" href="{{ url_for('contacts') }}">Назад к команде</a>
+      </div>
+    </div>
+    <div class="contact-hero-card">
+      <div class="profile-photo">
+        <img src="{{ person.photo }}" alt="{{ person.name }}">
+      </div>
+      <div class="pill-row">
+        {% for tag in person.expertise %}
+          <span class="role-tag">{{ tag }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="reviews">
+    <div class="comments-head">
+      <h3>Отзывы</h3>
+      {% if current_user %}<span class="status-badge muted">Новые отзывы проходят модерацию</span>{% endif %}
+    </div>
+    <div class="reviews-grid">
+      {% if reviews %}
+        {% for review in reviews %}
+          <article class="card">
+            <p class="review-text">“{{ review.content }}”</p>
+            <p class="review-author">— {{ review.author_name or 'Гость' }}{% if review.created_at %}, {{ review.created_at.strftime('%d.%m.%Y') }}{% endif %}</p>
+            {% if current_user and current_user.role in ['moderator', 'admin'] and review.status != 'published' %}
+              <form class="inline-form" action="{{ url_for('publish_review', review_id=review.id) }}" method="post">
+                <button class="pill primary" type="submit">Опубликовать</button>
+              </form>
+            {% elif review.status != 'published' %}
+              <span class="status-badge pending">{{ review.status }}</span>
+            {% endif %}
+          </article>
+        {% endfor %}
+      {% else %}
+        <p class="muted">Пока нет отзывов.</p>
+      {% endif %}
+    </div>
+
+    {% if current_user %}
+      <form class="comment-form" action="{{ url_for('add_review', slug=person.slug) }}" method="post">
+        <label for="review-content">Оставьте отзыв</label>
+        <textarea id="review-content" name="content" rows="4" placeholder="Напишите, чем помог наставник или организатор..." required></textarea>
+        <button class="pill dark" type="submit">Отправить на модерацию</button>
+      </form>
+    {% else %}
+      <p class="muted">Чтобы оставить отзыв, войдите в систему.</p>
+    {% endif %}
+  </section>
+{% endblock %}

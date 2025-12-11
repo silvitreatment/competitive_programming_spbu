@@ -20,13 +20,14 @@
         <div class="avatar {% if loop.index is even %}alt{% endif %}">{{ person.initials }}</div>
         <div class="contact-meta">
           <div class="contact-head">
-            <h3>{{ person.name }}</h3>
+            <h3><a href="{{ url_for('contact_detail', slug=person.slug) }}">{{ person.name }}</a></h3>
             <span class="role-tag">{{ person.role }}</span>
           </div>
           <p>{{ person.about }}</p>
           <div class="contact-links">
             {% if person.telegram %}<a class="link-pill" href="{{ person.telegram }}" target="_blank" rel="noopener">Telegram</a>{% endif %}
             {% if person.email %}<a class="link-pill" href="mailto:{{ person.email }}">Почта</a>{% endif %}
+            <a class="link-pill ghost" href="{{ url_for('contact_detail', slug=person.slug) }}">Профиль</a>
           </div>
         </div>
       </article>
