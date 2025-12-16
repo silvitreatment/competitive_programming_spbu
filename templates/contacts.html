@@ -27,6 +27,7 @@
           <div class="contact-links">
             {% if person.telegram %}<a class="link-pill" href="{{ person.telegram }}" target="_blank" rel="noopener">Telegram</a>{% endif %}
             {% if person.email %}<a class="link-pill" href="mailto:{{ person.email }}">Почта</a>{% endif %}
+            {% if person.github %}<a class="link-pill" href="{{ person.github }}" target="_blank" rel="noopener">GitHub</a>{% endif %}
             <a class="link-pill ghost" href="{{ url_for('contact_detail', slug=person.slug) }}">Профиль</a>
           </div>
         </div>

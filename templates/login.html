@@ -3,17 +3,26 @@
 {% block content %}
   <section class="form-wrap">
     <div class="section-heading">
-      <h2>Вход через Google</h2>
-      <p>Внутренняя авторизация отключена. Используйте Google-аккаунт, роли берутся из списков email в настройках.</p>
+      <h2>Вход через Google или Яндекс</h2>
+      <p>Внутренняя авторизация отключена. Используйте аккаунт Google или Яндекса, роли берутся из списков email в настройках.</p>
     </div>
 
-    {% if not app_config.GOOGLE_CLIENT_ID or not app_config.GOOGLE_CLIENT_SECRET %}
-      <div class="toast error"><strong>OAuth не настроен:</strong> задайте GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET.</div>
+    {% set google_ready = app_config.GOOGLE_CLIENT_ID and app_config.GOOGLE_CLIENT_SECRET %}
+    {% set yandex_ready = app_config.YANDEX_CLIENT_ID and app_config.YANDEX_CLIENT_SECRET %}
+    {% if not google_ready or not yandex_ready %}
+      <div class="toast error">
+        <strong>OAuth не настроен:</strong>
+        {% if not google_ready %} задайте GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET для Google.{% endif %}
+        {% if not yandex_ready %} задайте YANDEX_CLIENT_ID и YANDEX_CLIENT_SECRET для Яндекса.{% endif %}
+      </div>
     {% endif %}
 
     <div class="card form-card login-options">
-      <p>Кнопка ниже отправит вас на страницу входа Google. После успешной авторизации мы создадим профиль и применим роль.</p>
-      <a class="pill primary full" href="{{ url_for('login_with_google', next=next_url) }}">Войти через Google</a>
+      <p>Выберите провайдера, после чего мы создадим профиль и применим роль согласно спискам доступа.</p>
+      <div class="pill-row">
+        <a class="pill primary full" href="{{ url_for('login_with_google', next=next_url) }}">Войти через Google</a>
+        <a class="pill dark full" href="{{ url_for('login_with_yandex', next=next_url) }}">Войти через Яндекс</a>
+      </div>
     </div>
 
     <div class="card-actions">

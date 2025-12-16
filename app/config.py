@@ -22,6 +22,12 @@ class Config:
         "42776546874-ni1bv31g5f4ce8t361456tf685pmm4f0.apps.googleusercontent.com",
     )
     GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    YANDEX_CLIENT_ID = os.environ.get("YANDEX_CLIENT_ID")
+    YANDEX_CLIENT_SECRET = os.environ.get("YANDEX_CLIENT_SECRET")
+    YANDEX_SCOPE = os.environ.get(
+        "YANDEX_SCOPE",
+        "login:email login:info login:avatar login:birthdate login:phone",
+    )
 
     ADMIN_EMAILS = _split_env_list(os.environ.get("ADMIN_EMAILS", ""))
     MODERATOR_EMAILS = _split_env_list(os.environ.get("MODERATOR_EMAILS", ""))

@@ -36,7 +36,7 @@
         <span class="role-pill">{{ current_user.name or 'Пользователь' }} · {{ current_user.role }}</span>
         <a class="pill dark" href="{{ url_for('logout') }}">Выйти</a>
       {% else %}
-        <a class="pill dark" href="{{ url_for('login') }}">Войти через Google</a>
+        <a class="pill dark" href="{{ url_for('login') }}">Войти</a>
       {% endif %}
     </div>
   </header>

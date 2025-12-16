@@ -10,12 +10,15 @@
       <div class="contact-links">
         {% if person.telegram %}<a class="link-pill" href="{{ person.telegram }}" target="_blank" rel="noopener">Telegram</a>{% endif %}
         {% if person.email %}<a class="link-pill" href="mailto:{{ person.email }}">Почта</a>{% endif %}
+        {% if person.github %}<a class="link-pill" href="{{ person.github }}" target="_blank" rel="noopener">GitHub</a>{% endif %}
         <a class="link-pill ghost" href="{{ url_for('contacts') }}">Назад к команде</a>
       </div>
     </div>
     <div class="contact-hero-card">
+      {% set photo = person.photo or "" %}
+      {% set photo_src = photo if photo.startswith('http') else url_for('static', filename=photo) %}
       <div class="profile-photo">
-        <img src="{{ person.photo }}" alt="{{ person.name }}">
+        <img src="{{ photo_src }}" alt="{{ person.name }}">
       </div>
       <div class="pill-row">
         {% for tag in person.expertise %}

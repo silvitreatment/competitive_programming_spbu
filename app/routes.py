@@ -19,7 +19,7 @@ def register_routes(app) -> None:
             "about": "Преподаватель кружка, составитель контестов.",
             "telegram": "https://t.me/PlotDaniil",
             "email": "daniil@gmail.com",
-            "photo": url_for("static", filename="images/daniil.jpg"),
+            "photo": "images/daniil.jpg",
             "expertise": ["Лекции", "Контесты", "Материалы для занятий", "Разбор задач"],
         },
         {
@@ -30,7 +30,7 @@ def register_routes(app) -> None:
             "about": "Преподаватель кружка, составитель контестов.",
             "telegram": "https://t.me/kamenkremen",
             "email": "kamen@example.com",
-            "photo": url_for("static", filename="images/ivan.jpg"),
+            "photo": "images/ivan.jpg",
             "expertise": ["Лекции", "Контесты", "Материалы для занятий", "Разбор задач"],
         },
         {
@@ -39,15 +39,15 @@ def register_routes(app) -> None:
             "name": "Рафаэль Шойунчап",
             "role": "Преподаватель кружка",
             "about": (
-                "Иногда лектор"
-                "Делал десктоп-приложение для анализа графов (Kotlin + Jetpack Compose + SQLite/Neo4j): "
+                "Иногда лектор.                      "
+                "Немного обо мне: Делал десктоп-приложение для анализа графов (Kotlin + Jetpack Compose + SQLite/Neo4j): "
                 "Louvain, Форд–Беллман, MST, визуализация, CI с линтерами и тестами. "
-                "Преподаю спортпрогу: теория чисел и др."
+                "Преподаю спортпрогу: теория чисел и др. "
                 "Вел смену Импульс для олимпиадников в Вологде от СПбГУ"
             ),
             "telegram": "https://t.me/branch_study",
             "email": "1junyawork@example.com",
-            "photo": url_for("static", filename="images/rafael.jpg"),
+            "photo": "images/rafael.jpg",
             "github": "https://github.com/silvitreatment",
             "expertise": ["Лекции", "Материалы для занятий"],
         },
@@ -59,8 +59,8 @@ def register_routes(app) -> None:
             "about": "Преподаватель кружка, составитель контестов.",
             "telegram": "https://t.me/romanychev",
             "email": "romanychev@example.com",
-            "photo": url_for("static", filename="images/leonid.jpg"),
-            "expertise": ["UX", "Визуал", "Контент"],
+            "photo": "images/leonid.jpg",
+            "expertise": ["Лекции", "Контесты", "Материалы для занятий", "Разбор задач"],
         },
     ]
 
@@ -267,6 +267,31 @@ def register_routes(app) -> None:
         }
         return redirect("https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params))
 
+    @app.route("/login/yandex")
+    def login_with_yandex():
+        client_id = current_app.config.get("YANDEX_CLIENT_ID")
+        client_secret = current_app.config.get("YANDEX_CLIENT_SECRET")
+        if not client_id or not client_secret:
+            flash("Яндекс OAuth не настроен. Задайте YANDEX_CLIENT_ID и YANDEX_CLIENT_SECRET.")
+            return redirect(url_for("login"))
+
+        state = secrets.token_urlsafe(16)
+        session["oauth_state"] = state
+        next_url = safe_next_url(request.args.get("next") or request.args.get("redirect"))
+        if next_url:
+            session["oauth_next"] = next_url
+
+        redirect_uri = url_for("yandex_auth_callback", _external=True)
+        params = {
+            "response_type": "code",
+            "client_id": client_id,
+            "redirect_uri": redirect_uri,
+            "scope": current_app.config.get("YANDEX_SCOPE"),
+            "state": state,
+            "force_confirm": "yes",
+        }
+        return redirect("https://oauth.yandex.ru/authorize?" + urlencode(params))
+
     @app.route("/auth/google/callback")
     def google_auth_callback():
         if request.args.get("error"):
@@ -361,9 +386,104 @@ def register_routes(app) -> None:
         next_url = session.pop("oauth_next", None)
         return redirect(next_url or url_for("index"))
 
+    @app.route("/auth/yandex/callback")
+    def yandex_auth_callback():
+        if request.args.get("error"):
+            flash("Не удалось войти через Яндекс.")
+            return redirect(url_for("login"))
+
+        client_id = current_app.config.get("YANDEX_CLIENT_ID")
+        client_secret = current_app.config.get("YANDEX_CLIENT_SECRET")
+        if not client_id or not client_secret:
+            flash("Яндекс OAuth не настроен. Задайте YANDEX_CLIENT_ID и YANDEX_CLIENT_SECRET.")
+            return redirect(url_for("login"))
+
+        state = request.args.get("state")
+        if not state or state != session.get("oauth_state"):
+            abort(400)
+
+        code = request.args.get("code")
+        if not code:
+            flash("Яндекс не вернул код авторизации.")
+            return redirect(url_for("login"))
+
+        try:
+            token_resp = requests.post(
+                "https://oauth.yandex.ru/token",
+                data={
+                    "grant_type": "authorization_code",
+                    "code": code,
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                },
+                timeout=10,
+            )
+        except requests.RequestException:
+            flash("Не удалось обратиться к Яндексу для обмена кода.")
+            return redirect(url_for("login"))
+        if not token_resp.ok:
+            flash("Не удалось получить токен от Яндекса.")
+            return redirect(url_for("login"))
+
+        access_token = token_resp.json().get("access_token")
+        if not access_token:
+            flash("Ответ Яндекса не содержит токена.")
+            return redirect(url_for("login"))
+
+        try:
+            profile_resp = requests.get(
+                "https://login.yandex.ru/info",
+                params={"format": "json"},
+                headers={"Authorization": f"OAuth {access_token}"},
+                timeout=10,
+            )
+        except requests.RequestException:
+            flash("Не удалось получить профиль Яндекса.")
+            return redirect(url_for("login"))
+        if not profile_resp.ok:
+            flash("Не удалось получить профиль Яндекса.")
+            return redirect(url_for("login"))
+
+        profile = profile_resp.json()
+        external_id = profile.get("id") or profile.get("psuid")
+        emails = profile.get("emails") or []
+        email = profile.get("default_email") or (emails[0] if emails else None)
+        name = profile.get("real_name") or profile.get("display_name") or (email.split("@")[0] if email else None)
+
+        if not external_id:
+            flash("Яндекс не прислал идентификатор пользователя.")
+            return redirect(url_for("login"))
+
+        user = User.query.filter_by(provider="yandex", external_id=external_id).first()
+        if not user and email:
+            user = User.query.filter_by(email=email).first()
+        if not user:
+            user = User(
+                email=email,
+                name=name or "Пользователь Яндекса",
+                provider="yandex",
+                external_id=external_id,
+                role=resolve_role(email=email),
+            )
+            db.session.add(user)
+        else:
+            user.email = email
+            user.name = name or user.name
+            user.provider = "yandex"
+            user.external_id = external_id
+            user.role = resolve_role(email=email)
+
+        db.session.commit()
+        set_current_user(user)
+        session.pop("oauth_state", None)
+
+        flash("Вы вошли через Яндекс")
+        next_url = session.pop("oauth_next", None)
+        return redirect(next_url or url_for("index"))
+
     @app.route("/register", methods=["GET", "POST"])
     def register():
-        flash("Регистрация по логину и паролю отключена. Используйте вход через Google.")
+        flash("Регистрация по логину и паролю отключена. Используйте вход через Google или Яндекс.")
         return redirect(url_for("login"))
 
     @app.route("/logout")
