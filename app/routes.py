@@ -36,7 +36,7 @@ def register_routes(app) -> None:
         {
             "slug": "rey",
             "initials": "РШ",
-            "name": "Рафаэль Шойунчап.",
+            "name": "Рафаэль Шойунчап",
             "role": "Преподаватель кружка",
             "about": "Иногда лектор",
             "telegram": "https://t.me/branch_study",
