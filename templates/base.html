@@ -17,13 +17,13 @@
   </div>
 
   <header class="topbar container">
-    <div class="brand">
+    <a class="brand" href="{{ url_for('index') }}">
       <div class="badge badge-dark">∞</div>
       <div class="brand-meta">
         <p class="brand-name">База знаний</p>
         <p class="brand-sub">Кружок СПбГУ</p>
       </div>
-    </div>
+    </a>
     <nav class="main-nav">
       <a href="{{ url_for('articles_feed') }}">Статьи</a>
       <a href="{{ url_for('about') }}">О проекте</a>
