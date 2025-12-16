@@ -19,7 +19,7 @@ def register_routes(app) -> None:
             "about": "Преподаватель кружка, составитель контестов.",
             "telegram": "https://t.me/PlotDaniil",
             "email": "daniil@gmail.com",
-            "photo": "https://placehold.co/640x360/0f172a/e2e8f0?text=Никита",
+            "photo": url_for("static", filename="images/daniil.jpg"),
             "expertise": ["Лекции", "Контесты", "Материалы для занятий", "Разбор задач"],
         },
         {
@@ -30,7 +30,7 @@ def register_routes(app) -> None:
             "about": "Преподаватель кружка, составитель контестов.",
             "telegram": "https://t.me/kamenkremen",
             "email": "kamen@example.com",
-            "photo": "https://placehold.co/640x360/312e81/e0e7ff?text=Екатерина",
+            "photo": url_for("static", filename="images/ivan.jpg"),
             "expertise": ["Лекции", "Контесты", "Материалы для занятий", "Разбор задач"],
         },
         {
@@ -38,10 +38,17 @@ def register_routes(app) -> None:
             "initials": "РШ",
             "name": "Рафаэль Шойунчап",
             "role": "Преподаватель кружка",
-            "about": "Иногда лектор",
+            "about": (
+                "Иногда лектор"
+                "Делал десктоп-приложение для анализа графов (Kotlin + Jetpack Compose + SQLite/Neo4j): "
+                "Louvain, Форд–Беллман, MST, визуализация, CI с линтерами и тестами. "
+                "Преподаю спортпрогу: теория чисел и др."
+                "Вел смену Импульс для олимпиадников в Вологде от СПбГУ"
+            ),
             "telegram": "https://t.me/branch_study",
             "email": "1junyawork@example.com",
-            "photo": "https://placehold.co/640x360/0c4a6e/cbd5e1?text=Алексей",
+            "photo": url_for("static", filename="images/rafael.jpg"),
+            "github": "https://github.com/silvitreatment",
             "expertise": ["Лекции", "Материалы для занятий"],
         },
         {
@@ -52,7 +59,7 @@ def register_routes(app) -> None:
             "about": "Преподаватель кружка, составитель контестов.",
             "telegram": "https://t.me/romanychev",
             "email": "romanychev@example.com",
-            "photo": "https://placehold.co/640x360/1e293b/e2e8f0?text=Влада",
+            "photo": url_for("static", filename="images/leonid.jpg"),
             "expertise": ["UX", "Визуал", "Контент"],
         },
     ]
