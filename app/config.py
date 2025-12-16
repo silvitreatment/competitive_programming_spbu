@@ -24,8 +24,9 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
     YANDEX_CLIENT_ID = os.environ.get("YANDEX_CLIENT_ID")
     YANDEX_CLIENT_SECRET = os.environ.get("YANDEX_CLIENT_SECRET")
-    # Яндекс ожидает пробел-разделитель; состав прав — email, профиль, аватар, дата рождения, телефон.
-    YANDEX_SCOPE_DEFAULT = "login:email login:info login:avatar login:birthday login:phone"
+    # Яндекс ожидает пробел-разделитель; минимальный набор (email + базовый профиль).
+    # При необходимости добавляйте: login:avatar login:birthday login:phone
+    YANDEX_SCOPE_DEFAULT = "login:email login:info"
     YANDEX_SCOPE = os.environ.get("YANDEX_SCOPE") or YANDEX_SCOPE_DEFAULT
 
     ADMIN_EMAILS = _split_env_list(os.environ.get("ADMIN_EMAILS", ""))
