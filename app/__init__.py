@@ -1,5 +1,5 @@
 from flask import Flask
-
+from werkzeug.middleware.proxy_fix import ProxyFix
 from .auth import register_auth
 from .config import Config
 from .db_utils import initialize_database, register_db_hooks
@@ -21,6 +21,7 @@ def create_app(config_class: type = Config) -> Flask:
     register_db_hooks(app)
     register_auth(app)
     register_routes(app)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     # Make sure schema exists before serving requests (mirrors lazy hook).
     with app.app_context():
