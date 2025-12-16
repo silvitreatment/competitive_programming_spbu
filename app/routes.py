@@ -282,11 +282,15 @@ def register_routes(app) -> None:
             session["oauth_next"] = next_url
 
         redirect_uri = url_for("yandex_auth_callback", _external=True)
+        scope = (current_app.config.get("YANDEX_SCOPE") or "").strip()
+        if not scope:
+            scope = current_app.config.get("YANDEX_SCOPE_DEFAULT", "")
+        current_app.logger.info("Using Yandex scope: %s", scope)
         params = {
             "response_type": "code",
             "client_id": client_id,
             "redirect_uri": redirect_uri,
-            "scope": current_app.config.get("YANDEX_SCOPE"),
+            "scope": scope,
             "state": state,
             "force_confirm": "yes",
         }
