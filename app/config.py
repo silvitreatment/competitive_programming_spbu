@@ -13,6 +13,8 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'SOME_SECRET_KEY')
     ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
     ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'password123')
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 
     ADMIN_EMAILS = _split_env_list(os.environ.get('ADMIN_EMAILS', ''))
     MODERATOR_EMAILS = _split_env_list(os.environ.get('MODERATOR_EMAILS', ''))

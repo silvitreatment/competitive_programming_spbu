@@ -9,12 +9,29 @@ ROLE_HIERARCHY = {"user": 0, "moderator": 1, "admin": 2}
 
 
 def resolve_role(email: str | None = None, username: str | None = None) -> str:
+    """Derive role from configured admin/moderator lists by email or telegram username."""
+    email = (email or "").lower()
+    username = (username or "").lstrip("@").lower()
+    admin_emails = current_app.config.get("ADMIN_EMAILS", [])
+    moderator_emails = current_app.config.get("MODERATOR_EMAILS", [])
+    admin_telegrams = current_app.config.get("ADMIN_TELEGRAMS", [])
+    moderator_telegrams = current_app.config.get("MODERATOR_TELEGRAMS", [])
+
+    if email and email in admin_emails:
+        return "admin"
+    if email and email in moderator_emails:
+        return "moderator"
+    if username and username in admin_telegrams:
+        return "admin"
+    if username and username in moderator_telegrams:
+        return "moderator"
     return "user"
 
 
 def set_current_user(user: User) -> None:
     session["user_id"] = user.id
     session["role"] = user.role
+    session["logged_in"] = True
 
 
 def require_login(view: Callable) -> Callable:

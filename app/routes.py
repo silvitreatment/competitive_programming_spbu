@@ -1,7 +1,10 @@
-from flask import abort, current_app, flash, g, redirect, render_template, request, session, url_for
-from werkzeug.security import check_password_hash, generate_password_hash
+import secrets
+from urllib.parse import urlencode, urlparse
 
-from .auth import require_login, require_roles, set_current_user
+import requests
+from flask import abort, current_app, flash, g, redirect, render_template, request, session, url_for
+
+from .auth import require_login, require_roles, resolve_role, set_current_user
 from .extensions import db
 from .models import Article, Comment, Review, User
 
@@ -9,46 +12,46 @@ from .models import Article, Comment, Review, User
 def register_routes(app) -> None:
     contacts_data = [
         {
-            "slug": "nikita",
-            "initials": "НК",
-            "name": "Никита К.",
-            "role": "Руководитель кружка",
-            "about": "Куратор программы, встречи и стратегическое развитие.",
-            "telegram": "#",
-            "email": "nikita@example.com",
+            "slug": "daniil",
+            "initials": "ДП",
+            "name": "Даниил Плотников",
+            "role": "Преподаватель кружка",
+            "about": "Преподаватель кружка, составитель контестов.",
+            "telegram": "https://t.me/PlotDaniil",
+            "email": "daniil@gmail.com",
             "photo": "https://placehold.co/640x360/0f172a/e2e8f0?text=Никита",
-            "expertise": ["Олимпиады", "Стратегия кружка", "1:1 менторство"],
+            "expertise": ["Лекции", "Контесты", "Материалы для занятий", "Разбор задач"],
         },
         {
             "slug": "kate",
-            "initials": "ЕМ",
-            "name": "Екатерина М.",
-            "role": "Методист",
-            "about": "Помогает с конспектами, редактурой и практическими материалами.",
-            "telegram": "#",
-            "email": "kate@example.com",
+            "initials": "ИЗ",
+            "name": "Иван Закарлюка",
+            "role": "Преподаватель кружка",
+            "about": "Преподаватель кружка, составитель контестов.",
+            "telegram": "https://t.me/kamenkremen",
+            "email": "kamen@example.com",
             "photo": "https://placehold.co/640x360/312e81/e0e7ff?text=Екатерина",
-            "expertise": ["Редактура", "Конспекты", "Материалы для занятий"],
+            "expertise": ["Лекции", "Контесты", "Материалы для занятий", "Разбор задач"],
         },
         {
-            "slug": "alex",
-            "initials": "АС",
-            "name": "Алексей С.",
-            "role": "Ментор по задачам",
-            "about": "Разборы олимпиад, менторство и подготовка к интервью.",
-            "telegram": "#",
-            "email": "alex@example.com",
+            "slug": "rey",
+            "initials": "РШ",
+            "name": "Рафаэль Шойунчап.",
+            "role": "Преподаватель кружка",
+            "about": "Иногда лектор",
+            "telegram": "https://t.me/branch_study",
+            "email": "1junyawork@example.com",
             "photo": "https://placehold.co/640x360/0c4a6e/cbd5e1?text=Алексей",
-            "expertise": ["Разбор задач", "Интервью", "Алгоритмы"],
+            "expertise": ["Лекции", "Материалы для занятий"],
         },
         {
-            "slug": "vlada",
-            "initials": "ВД",
-            "name": "Влада Д.",
-            "role": "Дизайн и контент",
-            "about": "Визуал, UX и поддержка базы знаний в актуальном виде.",
-            "telegram": "#",
-            "email": "vlad@example.com",
+            "slug": "leonid",
+            "initials": "ЛР",
+            "name": "Леонид Романычев",
+            "role": "ex-Преподаватель кружка",
+            "about": "Преподаватель кружка, составитель контестов.",
+            "telegram": "https://t.me/romanychev",
+            "email": "romanychev@example.com",
             "photo": "https://placehold.co/640x360/1e293b/e2e8f0?text=Влада",
             "expertise": ["UX", "Визуал", "Контент"],
         },
@@ -211,76 +214,158 @@ def register_routes(app) -> None:
         flash("Отзыв опубликован")
         return redirect(url_for("contact_detail", slug=review.contact_slug))
 
-    @app.route("/login", methods=["GET", "POST"])
+    def safe_next_url(value: str | None) -> str | None:
+        if not value:
+            return None
+        parsed = urlparse(value)
+        if parsed.scheme or parsed.netloc:
+            if parsed.netloc != request.host:
+                return None
+            path = parsed.path or "/"
+            if parsed.query:
+                path = f"{path}?{parsed.query}"
+            return path
+        return value or "/"
+
+    @app.route("/login")
     def login():
-        error = None
-        if request.method == "POST" and request.form.get("login_method") == "password":
-            username = request.form.get("username", "")
-            password = request.form.get("password", "")
-            user = User.query.filter_by(provider="local", external_id=username).first()
+        next_url = safe_next_url(request.args.get("next") or request.referrer)
+        if g.current_user:
+            return redirect(next_url or url_for("index"))
+        return render_template("login.html", next_url=next_url)
 
-            if user and user.password_hash and check_password_hash(user.password_hash, password):
-                set_current_user(user)
-                flash("Вы вошли по логину и паролю")
-                return redirect(url_for("index"))
+    @app.route("/login/google")
+    def login_with_google():
+        client_id = current_app.config.get("GOOGLE_CLIENT_ID")
+        client_secret = current_app.config.get("GOOGLE_CLIENT_SECRET")
+        if not client_id or not client_secret:
+            flash("Google OAuth не настроен. Задайте GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET.")
+            return redirect(url_for("login"))
 
-            if username == current_app.config["ADMIN_USERNAME"] and password == current_app.config["ADMIN_PASSWORD"]:
-                if not user:
-                    user = User(
-                        email=None,
-                        name=username,
-                        provider="local",
-                        external_id=username,
-                        role="admin",
-                        password_hash=generate_password_hash(password),
-                    )
-                    db.session.add(user)
-                else:
-                    user.role = "admin"
-                    user.password_hash = generate_password_hash(password)
-                db.session.commit()
-                set_current_user(user)
-                flash("Вы вошли как админ")
-                return redirect(url_for("index"))
+        state = secrets.token_urlsafe(16)
+        session["oauth_state"] = state
+        next_url = safe_next_url(request.args.get("next") or request.args.get("redirect"))
+        if next_url:
+            session["oauth_next"] = next_url
 
-            error = "Неверное имя пользователя или пароль"
+        redirect_uri = url_for("google_auth_callback", _external=True)
+        params = {
+            "client_id": client_id,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "redirect_uri": redirect_uri,
+            "state": state,
+            "access_type": "offline",
+            "prompt": "select_account",
+        }
+        return redirect("https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params))
 
-        return render_template("login.html", error=error)
+    @app.route("/auth/google/callback")
+    def google_auth_callback():
+        if request.args.get("error"):
+            flash("Не удалось войти через Google.")
+            return redirect(url_for("login"))
+
+        client_id = current_app.config.get("GOOGLE_CLIENT_ID")
+        client_secret = current_app.config.get("GOOGLE_CLIENT_SECRET")
+        if not client_id or not client_secret:
+            flash("Google OAuth не настроен. Задайте GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET.")
+            return redirect(url_for("login"))
+
+        state = request.args.get("state")
+        if not state or state != session.get("oauth_state"):
+            abort(400)
+
+        code = request.args.get("code")
+        if not code:
+            flash("Google не вернул код авторизации.")
+            return redirect(url_for("login"))
+
+        try:
+            token_resp = requests.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "code": code,
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "redirect_uri": url_for("google_auth_callback", _external=True),
+                    "grant_type": "authorization_code",
+                },
+                timeout=10,
+            )
+        except requests.RequestException:
+            flash("Не удалось обратиться к Google для обмена кода.")
+            return redirect(url_for("login"))
+        if not token_resp.ok:
+            flash("Не удалось получить токен от Google.")
+            return redirect(url_for("login"))
+
+        access_token = token_resp.json().get("access_token")
+        if not access_token:
+            flash("Ответ Google не содержит токена.")
+            return redirect(url_for("login"))
+
+        try:
+            profile_resp = requests.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {access_token}"},
+                timeout=10,
+            )
+        except requests.RequestException:
+            flash("Не удалось получить профиль Google.")
+            return redirect(url_for("login"))
+        if not profile_resp.ok:
+            flash("Не удалось получить профиль Google.")
+            return redirect(url_for("login"))
+
+        profile = profile_resp.json()
+        email = profile.get("email")
+        external_id = profile.get("sub")
+        name = profile.get("name") or (email.split("@")[0] if email else None)
+
+        if not email or not external_id:
+            flash("Google не прислал email или идентификатор пользователя.")
+            return redirect(url_for("login"))
+
+        user = User.query.filter_by(provider="google", external_id=external_id).first()
+        if not user and email:
+            user = User.query.filter_by(email=email).first()
+        if not user:
+            user = User(
+                email=email,
+                name=name,
+                provider="google",
+                external_id=external_id,
+                role=resolve_role(email=email),
+            )
+            db.session.add(user)
+        else:
+            user.email = email
+            user.name = name
+            user.provider = "google"
+            user.external_id = external_id
+            user.role = resolve_role(email=email)
+
+        db.session.commit()
+        set_current_user(user)
+        session.pop("oauth_state", None)
+
+        flash("Вы вошли через Google")
+        next_url = session.pop("oauth_next", None)
+        return redirect(next_url or url_for("index"))
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
-        error = None
-        if request.method == "POST":
-            username = request.form.get("username", "").strip()
-            name = request.form.get("name", "").strip() or username
-            password = request.form.get("password", "")
-            confirm = request.form.get("confirm", "")
-            if not username or not password:
-                error = "Заполните все поля"
-            elif password != confirm:
-                error = "Пароли не совпадают"
-            elif User.query.filter_by(provider="local", external_id=username).first():
-                error = "Такой пользователь уже существует"
-            else:
-                user = User(
-                    name=name,
-                    provider="local",
-                    external_id=username,
-                    role="user",
-                    password_hash=generate_password_hash(password),
-                )
-                db.session.add(user)
-                db.session.commit()
-                set_current_user(user)
-                flash("Регистрация прошла успешно")
-                return redirect(url_for("index"))
-
-        return render_template("register.html", error=error)
+        flash("Регистрация по логину и паролю отключена. Используйте вход через Google.")
+        return redirect(url_for("login"))
 
     @app.route("/logout")
     def logout():
         session.pop("user_id", None)
         session.pop("role", None)
+        session.pop("logged_in", None)
+        session.pop("oauth_state", None)
+        session.pop("oauth_next", None)
         flash("Вы вышли из системы")
         return redirect(url_for("index"))
 

@@ -3,25 +3,20 @@
 {% block content %}
   <section class="form-wrap">
     <div class="section-heading">
-      <h2>Войти в базу</h2>
-      <p>Выберите способ авторизации: логин/пароль для админов или соцсети. Роли назначаются по спискам админов/модераторов.</p>
+      <h2>Вход через Google</h2>
+      <p>Внутренняя авторизация отключена. Используйте Google-аккаунт, роли берутся из списков email в настройках.</p>
     </div>
-    {% if error %}
-      <div class="toast error"><strong>Ошибка:</strong> {{ error }}</div>
+
+    {% if not app_config.GOOGLE_CLIENT_ID or not app_config.GOOGLE_CLIENT_SECRET %}
+      <div class="toast error"><strong>OAuth не настроен:</strong> задайте GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET.</div>
     {% endif %}
-    <form class="card form-card login-options" action="{{ url_for('login') }}" method="post">
-      <input type="hidden" name="login_method" value="password">
-      <label>Имя пользователя
-        <input type="text" name="username" placeholder="admin">
-      </label>
-      <label>Пароль
-        <input type="password" name="password" placeholder="••••••••">
-      </label>
-      <button class="pill primary full" type="submit">Войти по паролю</button>
-    </form>
+
+    <div class="card form-card login-options">
+      <p>Кнопка ниже отправит вас на страницу входа Google. После успешной авторизации мы создадим профиль и применим роль.</p>
+      <a class="pill primary full" href="{{ url_for('login_with_google', next=next_url) }}">Войти через Google</a>
+    </div>
 
     <div class="card-actions">
-      <a class="pill outline" href="{{ url_for('register') }}">Регистрация</a>
       <a class="pill outline" href="{{ url_for('index') }}">Назад</a>
     </div>
   </section>
