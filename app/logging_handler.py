@@ -7,7 +7,7 @@ import requests
 
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-UNIFIED_AGENT_URL = os.getenv("UNIFIED_AGENT_URL", "http://127.0.0.1:22132/write")
+UNIFIED_AGENT_URL = os.getenv("UNIFIED_AGENT_URL", "http://158.160.179.91:22132/write")
 HTTP_TIMEOUT = float(os.getenv("LOG_HTTP_TIMEOUT", "1.0"))
 
 # Keys present on every LogRecord; used to filter extras for JSON payload.
@@ -71,6 +71,7 @@ class HttpPostHandler(logging.Handler):
             payload = self.format(record)
             headers = {"Content-Type": "application/json"}
             requests.post(self.url, data=payload, headers=headers, timeout=self.timeout)
+            print("log requested")
         except Exception:
             # Avoid breaking the app if logging fails
             self.handleError(record)
