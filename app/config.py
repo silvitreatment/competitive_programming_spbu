@@ -1,6 +1,8 @@
 import os
 from typing import List
+import logging 
 
+logger = logging.getLogger(__name__)
 
 def _split_env_list(env_value: str) -> List[str]:
     return [entry.strip().lower() for entry in env_value.split(",") if entry.strip()]

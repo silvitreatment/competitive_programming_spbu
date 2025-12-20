@@ -5,7 +5,7 @@ from .config import Config
 from .db_utils import initialize_database, register_db_hooks
 from .extensions import db
 from .routes import register_routes
-
+import app.logging_handler
 
 def create_app(config_class: type = Config) -> Flask:
     """Application factory that wires extensions, auth, routes and DB checks."""
