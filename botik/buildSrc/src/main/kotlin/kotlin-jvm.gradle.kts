@@ -9,11 +9,6 @@ plugins {
     kotlin("jvm")
 }
 
-kotlin {
-    // Use a specific Java version to make it easier to work in different environments.
-    jvmToolchain(25)
-}
-
 tasks.withType<Test>().configureEach {
     // Configure all test Gradle tasks to use JUnitPlatform.
     useJUnitPlatform()
