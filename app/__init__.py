@@ -5,7 +5,9 @@ from .config import Config
 from .db_utils import initialize_database, register_db_hooks
 from .extensions import db
 from .routes import register_routes
-import app.logging_handler
+import logging 
+
+logger = logging.getLogger(__name__)
 
 def create_app(config_class: type = Config) -> Flask:
     """Application factory that wires extensions, auth, routes and DB checks."""
@@ -17,12 +19,19 @@ def create_app(config_class: type = Config) -> Flask:
     )
     app.config.from_object(config_class)
 
+        
+          
     db.init_app(app)
     register_db_hooks(app)
     register_auth(app)
     register_routes(app)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
-
+    logger.log(
+        logging.INFO,
+        "run_simulation_created",
+        extra={"network_id": 1, "simulation_id": 2, "task_guid": 4},
+        
+    )
     # Make sure schema exists before serving requests (mirrors lazy hook).
     with app.app_context():
         initialize_database()

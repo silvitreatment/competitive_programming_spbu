@@ -1,4 +1,5 @@
 import secrets
+import time
 from urllib.parse import urlencode, urlparse
 
 import requests
@@ -281,11 +282,14 @@ def register_routes(app) -> None:
         if next_url:
             session["oauth_next"] = next_url
 
-        redirect_uri = url_for("yandex_auth_callback", _external=True)
+        redirect_uri = current_app.config.get("YANDEX_REDIRECT_URI") or url_for("yandex_auth_callback", _external=True)
         scope = (current_app.config.get("YANDEX_SCOPE") or "").strip()
         if not scope:
             scope = current_app.config.get("YANDEX_SCOPE_DEFAULT", "")
-        current_app.logger.info("Using Yandex scope: %s", scope)
+        current_app.logger.info(
+            "Using Yandex OAuth params",
+            extra={"scope": scope, "redirect_uri": redirect_uri, "host": request.host_url},
+        )
         params = {
             "response_type": "code",
             "client_id": client_id,
@@ -294,7 +298,7 @@ def register_routes(app) -> None:
             "state": state,
             "force_confirm": "yes",
         }
-        return redirect("https://oauth.yandex.ru/authorize?" + urlencode(params))
+        return redirect("https://oauth.yandex.com/authorize?" + urlencode(params))
 
     @app.route("/auth/google/callback")
     def google_auth_callback():
@@ -336,9 +340,38 @@ def register_routes(app) -> None:
             flash("Не удалось получить токен от Google.")
             return redirect(url_for("login"))
 
-        access_token = token_resp.json().get("access_token")
-        if not access_token:
-            flash("Ответ Google не содержит токена.")
+        token_data = token_resp.json()
+        access_token = token_data.get("access_token")
+        id_token = token_data.get("id_token")
+        if not access_token or not id_token:
+            flash("Ответ Google не содержит токенов.")
+            return redirect(url_for("login"))
+
+        try:
+            id_token_resp = requests.get(
+                "https://oauth2.googleapis.com/tokeninfo",
+                params={"id_token": id_token},
+                timeout=10,
+            )
+        except requests.RequestException:
+            flash("Не удалось проверить ID токен Google.")
+            return redirect(url_for("login"))
+        if not id_token_resp.ok:
+            flash("Недействительный ID токен Google.")
+            return redirect(url_for("login"))
+
+        id_info = id_token_resp.json()
+        if id_info.get("aud") != client_id:
+            abort(400)
+        issuer = id_info.get("iss")
+        if issuer not in ("https://accounts.google.com", "accounts.google.com"):
+            abort(400)
+        try:
+            if id_info.get("exp") and int(id_info["exp"]) < int(time.time()):
+                flash("Срок действия сессии Google истек. Войдите снова.")
+                return redirect(url_for("login"))
+        except (TypeError, ValueError):
+            flash("Не удалось проверить срок действия ID токена.")
             return redirect(url_for("login"))
 
         try:
@@ -355,9 +388,9 @@ def register_routes(app) -> None:
             return redirect(url_for("login"))
 
         profile = profile_resp.json()
-        email = profile.get("email")
-        external_id = profile.get("sub")
-        name = profile.get("name") or (email.split("@")[0] if email else None)
+        email = profile.get("email") or id_info.get("email")
+        external_id = profile.get("sub") or id_info.get("sub")
+        name = profile.get("name") or id_info.get("name") or (email.split("@")[0] if email else None)
 
         if not email or not external_id:
             flash("Google не прислал email или идентификатор пользователя.")
@@ -411,14 +444,20 @@ def register_routes(app) -> None:
             flash("Яндекс не вернул код авторизации.")
             return redirect(url_for("login"))
 
+        redirect_uri = current_app.config.get("YANDEX_REDIRECT_URI") or url_for("yandex_auth_callback", _external=True)
+        current_app.logger.info(
+            "Exchanging Yandex code",
+            extra={"redirect_uri": redirect_uri, "request_host": request.host_url},
+        )
         try:
             token_resp = requests.post(
-                "https://oauth.yandex.ru/token",
+                "https://oauth.yandex.com/token",
                 data={
                     "grant_type": "authorization_code",
                     "code": code,
                     "client_id": client_id,
                     "client_secret": client_secret,
+                    "redirect_uri": redirect_uri,
                 },
                 timeout=10,
             )
