@@ -33,7 +33,8 @@ class Config:
     YANDEX_SCOPE_DEFAULT = "login:email login:info login:birthday"
     YANDEX_SCOPE = os.environ.get("YANDEX_SCOPE") or YANDEX_SCOPE_DEFAULT
 
-    ADMIN_EMAILS = _split_env_list(os.environ.get("ADMIN_EMAILS", ""))
+    # По умолчанию включаем администратора 1junyawork@gmail.com; переопределяйте через ADMIN_EMAILS.
+    ADMIN_EMAILS = _split_env_list(os.environ.get("ADMIN_EMAILS", "1junyawork@gmail.com"))
     MODERATOR_EMAILS = _split_env_list(os.environ.get("MODERATOR_EMAILS", ""))
     ADMIN_TELEGRAMS = _split_env_list(os.environ.get("ADMIN_TELEGRAMS", ""))
     MODERATOR_TELEGRAMS = _split_env_list(os.environ.get("MODERATOR_TELEGRAMS", ""))

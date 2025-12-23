@@ -123,6 +123,31 @@ a {
   margin: 0 auto;
 }
 
+.bg-aurora {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+  mix-blend-mode: screen;
+}
+
+.aurora {
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  filter: blur(90px);
+  opacity: 0.25;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(14, 165, 233, 0.5), transparent 50%),
+              radial-gradient(circle at 70% 70%, rgba(236, 72, 153, 0.45), transparent 50%);
+  animation: drift 14s ease-in-out infinite alternate;
+}
+
+.aurora-1 { top: -15%; left: -10%; animation-duration: 16s; }
+.aurora-2 { top: 20%; right: -25%; animation-duration: 18s; }
+.aurora-3 { bottom: -20%; left: 15%; animation-duration: 20s; }
+
 .bg-orbit {
   position: fixed;
   inset: 0;
@@ -164,6 +189,12 @@ a {
   bottom: -180px;
   left: 20%;
   animation: floaty 12s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0% { transform: translate3d(-10px, 0, 0) scale(1); opacity: 0.23; }
+  50% { transform: translate3d(40px, -20px, 0) scale(1.05); opacity: 0.32; }
+  100% { transform: translate3d(-30px, 20px, 0) scale(0.95); opacity: 0.24; }
 }
 
 .topbar {
@@ -939,6 +970,185 @@ a {
   padding: 14px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
+}
+
+/* CV layout for contact detail */
+.cv-hero {
+  display: grid;
+  grid-template-columns: 240px 1fr 320px;
+  gap: 18px;
+  align-items: start;
+  margin: 26px 0 12px;
+}
+
+.cv-photo {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  background: #0f172a;
+}
+
+.cv-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cv-role {
+  display: inline-flex;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #e2e8f0;
+  margin: 6px 0 12px;
+}
+
+.cv-header h1 {
+  margin: 0 0 6px;
+  font-size: 34px;
+}
+
+.cv-lead {
+  color: #cbd5e1;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.cv-tags, .cv-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 12px;
+}
+
+.cv-tag, .cv-badge {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.cv-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cv-card {
+  background: linear-gradient(135deg, #0f172a, #111827);
+  padding: 18px;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.cv-card h3 {
+  margin: 0 0 10px;
+}
+
+.cv-meta {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.cv-meta li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cv-meta span {
+  color: var(--muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cv-meta a {
+  color: #e2e8f0;
+  font-weight: 700;
+  text-align: right;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.cv-meta li > :last-child {
+  justify-self: end;
+  text-align: right;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.cv-body {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 18px;
+  margin: 10px 0 30px;
+}
+
+.cv-column {
+  display: grid;
+  gap: 14px;
+}
+
+.cv-block {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+
+.cv-block h3 {
+  margin: 0 0 8px;
+}
+
+.cv-text {
+  margin: 0;
+  color: #e2e8f0;
+  line-height: 1.6;
+}
+
+.reviews-grid.compact article.card {
+  background: #0b1220;
+}
+
+@media (max-width: 1024px) {
+  .cv-hero {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "photo header"
+      "card card";
+  }
+  .cv-photo { grid-area: photo; }
+  .cv-header { grid-area: header; }
+  .cv-card { grid-area: card; }
+  .cv-body { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .cv-hero {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "photo"
+      "header"
+      "card";
+  }
+  .cv-photo { max-height: 320px; }
+  .cv-contacts { gap: 8px; }
+  .cv-card, .cv-block { padding: 14px; }
 }
 
 .comment-meta {

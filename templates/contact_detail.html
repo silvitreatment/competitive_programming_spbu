@@ -1,66 +1,84 @@
 {% extends "base.html" %}
 {% block title %}{{ person.name }} — Контакты{% endblock %}
 {% block content %}
-  <section class="contact-hero detail">
-    <div>
-      <p class="eyebrow">Преподаватели</p>
+  {% set photo = person.photo or "" %}
+  {% set photo_src = photo if photo.startswith('http') else url_for('static', filename=photo) %}
+
+  <section class="cv-hero">
+    <div class="cv-photo">
+      <img src="{{ photo_src }}" alt="{{ person.name }}">
+    </div>
+    <div class="cv-header">
+      <p class="eyebrow">Команда · Преподаватели</p>
       <h1>{{ person.name }}</h1>
-      <p class="lead">{{ person.role }}</p>
-      <p>{{ person.about }}</p>
-      <div class="contact-links">
-        {% if person.telegram %}<a class="link-pill" href="{{ person.telegram }}" target="_blank" rel="noopener">Telegram</a>{% endif %}
-        {% if person.email %}<a class="link-pill" href="mailto:{{ person.email }}">Почта</a>{% endif %}
-        {% if person.github %}<a class="link-pill" href="{{ person.github }}" target="_blank" rel="noopener">GitHub</a>{% endif %}
-        <a class="link-pill ghost" href="{{ url_for('contacts') }}">Назад к команде</a>
+      <div class="cv-role">{{ person.role }}</div>
+      <div class="cv-contacts">
+        {% if person.telegram %}<a class="pill dark" href="{{ person.telegram }}" target="_blank" rel="noopener">Telegram</a>{% endif %}
+        {% if person.email %}<a class="pill ghost" href="mailto:{{ person.email }}">Почта</a>{% endif %}
+        {% if person.github %}<a class="pill ghost" href="{{ person.github }}" target="_blank" rel="noopener">GitHub</a>{% endif %}
+        <a class="pill light" href="{{ url_for('contacts') }}">Назад</a>
       </div>
     </div>
-    <div class="contact-hero-card">
-      {% set photo = person.photo or "" %}
-      {% set photo_src = photo if photo.startswith('http') else url_for('static', filename=photo) %}
-      <div class="profile-photo">
-        <img src="{{ photo_src }}" alt="{{ person.name }}">
-      </div>
-      <div class="pill-row">
-        {% for tag in person.expertise %}
-          <span class="role-tag">{{ tag }}</span>
-        {% endfor %}
-      </div>
+    <div class="cv-card">
+      <h3>Профиль</h3>
+      <ul class="cv-meta">
+        {% if person.telegram %}<li><span>Telegram</span><a href="{{ person.telegram }}" target="_blank" rel="noopener">{{ person.telegram|replace('https://t.me/', '@') }}</a></li>{% endif %}
+        {% if person.email %}<li><span>Почта</span><a href="mailto:{{ person.email }}">{{ person.email }}</a></li>{% endif %}
+        {% if person.github %}<li><span>GitHub</span><a href="{{ person.github }}" target="_blank" rel="noopener">{{ person.github }}</a></li>{% endif %}
+        <li><span>Роль</span>{{ person.role }}</li>
+      </ul>
     </div>
   </section>
 
-  <section class="reviews">
-    <div class="comments-head">
-      <h3>Отзывы</h3>
-      {% if current_user %}<span class="status-badge muted">Новые отзывы проходят модерацию</span>{% endif %}
+  <section class="cv-body">
+    <div class="cv-column">
+      <div class="cv-block">
+        <h3>О себе</h3>
+        <p class="cv-text">{{ person.about }}</p>
+      </div>
+      <div class="cv-block">
+        <h3>Экспертиза</h3>
+        <div class="cv-badges">
+          {% for tag in person.expertise %}
+            <span class="cv-badge">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
     </div>
-    <div class="reviews-grid">
-      {% if reviews %}
-        {% for review in reviews %}
-          <article class="card">
-            <p class="review-text">“{{ review.content }}”</p>
-            <p class="review-author">— {{ review.author_name or 'Гость' }}{% if review.created_at %}, {{ review.created_at.strftime('%d.%m.%Y') }}{% endif %}</p>
-            {% if current_user and current_user.role in ['moderator', 'admin'] and review.status != 'published' %}
-              <form class="inline-form" action="{{ url_for('publish_review', review_id=review.id) }}" method="post">
-                <button class="pill primary" type="submit">Опубликовать</button>
-              </form>
-            {% elif review.status != 'published' %}
-              <span class="status-badge pending">{{ review.status }}</span>
-            {% endif %}
-          </article>
-        {% endfor %}
-      {% else %}
-        <p class="muted">Пока нет отзывов.</p>
-      {% endif %}
-    </div>
+    <div class="cv-column">
+      <div class="cv-block">
+        <h3>Отзывы</h3>
+        <p class="muted">Новые отзывы проходят модерацию.</p>
+        <div class="reviews-grid compact">
+          {% if reviews %}
+            {% for review in reviews %}
+              <article class="card">
+                <p class="review-text">“{{ review.content }}”</p>
+                <p class="review-author">— {{ review.author_name or 'Гость' }}{% if review.created_at %}, {{ review.created_at.strftime('%d.%m.%Y') }}{% endif %}</p>
+                {% if current_user and current_user.role in ['moderator', 'admin'] and review.status != 'published' %}
+                  <form class="inline-form" action="{{ url_for('publish_review', review_id=review.id) }}" method="post">
+                    <button class="pill primary" type="submit">Опубликовать</button>
+                  </form>
+                {% elif review.status != 'published' %}
+                  <span class="status-badge pending">{{ review.status }}</span>
+                {% endif %}
+              </article>
+            {% endfor %}
+          {% else %}
+            <p class="muted">Пока нет отзывов.</p>
+          {% endif %}
+        </div>
 
-    {% if current_user %}
-      <form class="comment-form" action="{{ url_for('add_review', slug=person.slug) }}" method="post">
-        <label for="review-content">Оставьте отзыв</label>
-        <textarea id="review-content" name="content" rows="4" placeholder="Напишите, чем помог наставник или организатор..." required></textarea>
-        <button class="pill dark" type="submit">Отправить на модерацию</button>
-      </form>
-    {% else %}
-      <p class="muted">Чтобы оставить отзыв, войдите в систему.</p>
-    {% endif %}
+        {% if current_user %}
+          <form class="comment-form" action="{{ url_for('add_review', slug=person.slug) }}" method="post">
+            <label for="review-content">Оставьте отзыв</label>
+            <textarea id="review-content" name="content" rows="4" placeholder="Напишите, чем помог наставник или организатор..." required></textarea>
+            <button class="pill dark" type="submit">Отправить на модерацию</button>
+          </form>
+        {% else %}
+          <p class="muted">Чтобы оставить отзыв, войдите в систему.</p>
+        {% endif %}
+      </div>
+    </div>
   </section>
 {% endblock %}

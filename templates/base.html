@@ -10,6 +10,11 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="{% if session.get('logged_in') %}is-auth{% endif %}">
+  <div class="bg-aurora">
+    <span class="aurora aurora-1"></span>
+    <span class="aurora aurora-2"></span>
+    <span class="aurora aurora-3"></span>
+  </div>
   <div class="bg-orbit">
     <span class="blob blob-1"></span>
     <span class="blob blob-2"></span>

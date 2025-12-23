@@ -9,6 +9,7 @@ import requests
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 UNIFIED_AGENT_URL = os.getenv("UNIFIED_AGENT_URL", "http://158.160.179.91:22132/write")
 HTTP_TIMEOUT = float(os.getenv("LOG_HTTP_TIMEOUT", "1.0"))
+APP_LOG_PREFIX = os.getenv("APP_LOG_PREFIX", "app")
 
 # Keys present on every LogRecord; used to filter extras for JSON payload.
 _RESERVED = {
@@ -71,10 +72,16 @@ class HttpPostHandler(logging.Handler):
             payload = self.format(record)
             headers = {"Content-Type": "application/json"}
             requests.post(self.url, data=payload, headers=headers, timeout=self.timeout)
-            print("log requested")
         except Exception:
             # Avoid breaking the app if logging fails
             self.handleError(record)
+
+
+class AppLogsFilter(logging.Filter):
+    """Allow only application logs (by logger name prefix) to pass."""
+
+    def filter(self, record: logging.LogRecord) -> bool:  # pragma: no cover - trivial
+        return bool(record.name == APP_LOG_PREFIX or record.name.startswith(f"{APP_LOG_PREFIX}."))
 
 
 def _configure_logging() -> None:
@@ -95,6 +102,7 @@ def _configure_logging() -> None:
     http_handler = HttpPostHandler(UNIFIED_AGENT_URL, timeout=HTTP_TIMEOUT)
     http_handler.setLevel(LOG_LEVEL)
     http_handler.setFormatter(formatter)
+    http_handler.addFilter(AppLogsFilter())
     root.addHandler(http_handler)
 
 
