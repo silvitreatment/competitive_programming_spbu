@@ -111,6 +111,8 @@ body {
   position: relative;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  /* Временная рамка, чтобы видно было деплой изменения */
+  box-shadow: inset 0 0 0 4px #22c55e;
 }
 
 a {
