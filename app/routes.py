@@ -44,7 +44,13 @@ def register_routes(app) -> None:
                 "Немного обо мне: Делал десктоп-приложение для анализа графов (Kotlin + Jetpack Compose + SQLite/Neo4j): "
                 "Louvain, Форд–Беллман, MST, визуализация, CI с линтерами и тестами. "
                 "Преподаю спортпрогу: теория чисел и др. "
-                "Вел смену Импульс для олимпиадников в Вологде от СПбГУ"
+                "Вел смену Импульс для олимпиадников в Вологде от СПбГУ "
+                "Технологии: Kotlin, Python, C++/C, Git, Linux, Ansible, Nginx. "
+                "Базы данных: PostgreSQL, SQLite, Neo4j. "
+                "Алертинг и мониторинг: Grafana, Loki, Prometheus, Promtail, Yandex Cloud Logging, Fluent Bit. "
+                "Деплой и инфраструктура: Docker, Kubernetes. "
+                "Языки: английский (B2). "
+                ""
             ),
             "telegram": "https://t.me/branch_study",
             "email": "1junyawork@example.com",
