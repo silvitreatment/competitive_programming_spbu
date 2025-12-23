@@ -977,7 +977,7 @@ a {
   display: grid;
   grid-template-columns: 240px 1fr 320px;
   gap: 18px;
-  align-items: start;
+  align-items: center;
   margin: 26px 0 12px;
 }
 
@@ -987,6 +987,7 @@ a {
   border-radius: 22px;
   box-shadow: var(--shadow);
   background: #0f172a;
+  max-height: 380px;
 }
 
 .cv-photo img {
@@ -1069,6 +1070,7 @@ a {
   padding: 10px 12px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
+  list-style: none;
 }
 
 .cv-meta span {
