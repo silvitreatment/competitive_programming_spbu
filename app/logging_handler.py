@@ -7,7 +7,7 @@ import requests
 
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-UNIFIED_AGENT_URL = os.getenv("UNIFIED_AGENT_URL", "http://158.160.179.91:22132/write")
+UNIFIED_AGENT_URL = os.getenv("UNIFIED_AGENT_URL")
 HTTP_TIMEOUT = float(os.getenv("LOG_HTTP_TIMEOUT", "1.0"))
 APP_LOG_PREFIX = os.getenv("APP_LOG_PREFIX", "app")
 
