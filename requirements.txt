@@ -2,4 +2,5 @@ flask
 markupsafe
 gunicorn
 SQLAlchemy
+alembic
 requests

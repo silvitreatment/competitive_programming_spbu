@@ -1,41 +1,26 @@
-from sqlalchemy import inspect, text
-from sqlalchemy.exc import OperationalError
+from pathlib import Path
 
-from .extensions import db
+from alembic import command
+from alembic.config import Config as AlembicConfig
+from flask import current_app
 
 _db_ready = False
 
 
-def ensure_schema() -> None:
-    inspector = inspect(db.engine)
-    try:
-        columns = {col["name"] for col in inspector.get_columns("article")}
-    except OperationalError:
-        db.create_all()
-        columns = {col["name"] for col in inspector.get_columns("article")}
-
-    with db.engine.begin() as conn:
-        if "status" not in columns:
-            conn.execute(text("ALTER TABLE article ADD COLUMN status VARCHAR(20) DEFAULT 'pending'"))
-        if "author_name" not in columns:
-            conn.execute(text("ALTER TABLE article ADD COLUMN author_name VARCHAR(200)"))
-
-        try:
-            user_cols = {col["name"] for col in inspector.get_columns("user")}
-        except OperationalError:
-            db.create_all()
-            user_cols = {col["name"] for col in inspector.get_columns("user")}
-
-        if "password_hash" not in user_cols:
-            conn.execute(text("ALTER TABLE user ADD COLUMN password_hash VARCHAR(255)"))
+def _alembic_config() -> AlembicConfig:
+    project_root = Path(__file__).resolve().parents[1]
+    alembic_ini = project_root / "alembic.ini"
+    config = AlembicConfig(str(alembic_ini))
+    config.set_main_option("sqlalchemy.url", current_app.config["SQLALCHEMY_DATABASE_URI"])
+    return config
 
 
 def initialize_database() -> None:
     global _db_ready
     if _db_ready:
         return
-    db.create_all()
-    ensure_schema()
+    config = _alembic_config()
+    command.upgrade(config, "head")
     _db_ready = True
 
 

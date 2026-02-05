@@ -1,8 +1,5 @@
 import os
 from typing import List
-import logging 
-
-logger = logging.getLogger(__name__)
 
 def _split_env_list(env_value: str) -> List[str]:
     return [entry.strip().lower() for entry in env_value.split(",") if entry.strip()]
@@ -26,20 +23,15 @@ class Config:
     GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
     YANDEX_CLIENT_ID = os.environ.get("YANDEX_CLIENT_ID")
     YANDEX_CLIENT_SECRET = os.environ.get("YANDEX_CLIENT_SECRET")
-    # Переопределите для совпадения с Callback URL, указанным в настройках приложения Яндекс.
     YANDEX_REDIRECT_URI = os.environ.get("YANDEX_REDIRECT_URI")
-    # Яндекс ожидает пробел-разделитель; минимальный набор (email + базовый профиль).
-    # Добавлено login:birthday для даты рождения; при необходимости расширяйте: login:avatar login:phone
     YANDEX_SCOPE_DEFAULT = "login:email login:info login:birthday"
     YANDEX_SCOPE = os.environ.get("YANDEX_SCOPE") or YANDEX_SCOPE_DEFAULT
 
-    # По умолчанию включаем администратора 1junyawork@gmail.com; переопределяйте через ADMIN_EMAILS.
     ADMIN_EMAILS = _split_env_list(os.environ.get("ADMIN_EMAILS", "1junyawork@gmail.com"))
     MODERATOR_EMAILS = _split_env_list(os.environ.get("MODERATOR_EMAILS", ""))
     ADMIN_TELEGRAMS = _split_env_list(os.environ.get("ADMIN_TELEGRAMS", ""))
     MODERATOR_TELEGRAMS = _split_env_list(os.environ.get("MODERATOR_TELEGRAMS", ""))
 
-    # HTTPS settings: provide cert/key paths or set SSL_ADHOC=1 for a self-signed dev cert.
     SSL_CERT_PATH = os.environ.get("SSL_CERT_PATH")
     SSL_KEY_PATH = os.environ.get("SSL_KEY_PATH")
     SSL_ADHOC = _env_flag(os.environ.get("SSL_ADHOC"))
